@@ -142,5 +142,5 @@ class WorkoutAPITest(APITestCase):
 
 class APIRootTest(APITestCase):
     def test_api_root(self):
-        response = self.client.get('/')
+        response = self.client.get('/api/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
