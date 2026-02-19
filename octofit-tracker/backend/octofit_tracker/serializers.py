@@ -6,7 +6,7 @@ from octofit_tracker.models import User, Team, Activity, Leaderboard, Workout
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'password', 'team_id', 'created_at']
+        fields = ['id', 'name', 'username', 'email', 'password', 'team_id', 'created_at']
         extra_kwargs = {'password': {'write_only': True}}
 
     def to_representation(self, instance):
@@ -19,9 +19,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
+    members_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Team
-        fields = ['id', 'name', 'description', 'created_at']
+        fields = ['id', 'name', 'description', 'members_count', 'created_at']
+
+    def get_members_count(self, obj):
+        return User.objects.filter(team_id=str(obj.id)).count()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -47,9 +52,17 @@ class ActivitySerializer(serializers.ModelSerializer):
 
 
 class LeaderboardSerializer(serializers.ModelSerializer):
+    team_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Leaderboard
-        fields = ['id', 'team_id', 'total_calories', 'total_activities', 'rank', 'updated_at']
+        fields = ['id', 'team_id', 'team_name', 'total_calories', 'total_activities', 'rank', 'updated_at']
+
+    def get_team_name(self, obj):
+        try:
+            return Team.objects.get(id=obj.team_id).name
+        except (Team.DoesNotExist, ValueError):
+            return obj.team_id
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
